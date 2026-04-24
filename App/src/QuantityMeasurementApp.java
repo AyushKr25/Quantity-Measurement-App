@@ -13,6 +13,14 @@ enum LengthUnit {
     public double getConversionFactor() {
         return conversionFactor;
     }
+
+    public double convertToBaseUnit(double value) {
+        return Math.round(value * this.conversionFactor * 100.0) / 100.0;
+    }
+
+    public double convertFromBaseUnit(double baseValue) {
+        return Math.round((baseValue / this.conversionFactor) * 100.0) / 100.0;
+    }
 }
 
 class Length {
@@ -20,18 +28,18 @@ class Length {
     private final LengthUnit unit;
 
     public Length(double value, LengthUnit unit) {
+        if (unit == null) {
+            throw new IllegalArgumentException("Unit cannot be null");
+        }
+        if (!Double.isFinite(value)) {
+            throw new IllegalArgumentException("Value must be a finite number");
+        }
         this.value = value;
         this.unit = unit;
     }
 
     private double convertToBaseUnit() {
-        double inInches = this.value * this.unit.getConversionFactor();
-        return Math.round(inInches * 100.0) / 100.0;
-    }
-
-    private double convertFromBaseToTargetUnit(double lengthInInches, LengthUnit targetUnit) {
-        double targetValue = lengthInInches / targetUnit.getConversionFactor();
-        return Math.round(targetValue * 100.0) / 100.0;
+        return this.unit.convertToBaseUnit(this.value);
     }
 
     public Length convertTo(LengthUnit targetUnit) {
@@ -39,10 +47,9 @@ class Length {
             throw new IllegalArgumentException("Target unit cannot be null");
         }
         double inInches = this.convertToBaseUnit();
-        return new Length(this.convertFromBaseToTargetUnit(inInches, targetUnit), targetUnit);
+        return new Length(targetUnit.convertFromBaseUnit(inInches), targetUnit);
     }
 
-    // UC6: Addition where result defaults to the unit of the first operand
     public Length add(Length thatLength) {
         if (thatLength == null || thatLength.unit == null) {
             throw new IllegalArgumentException("Length to add cannot be null");
@@ -50,7 +57,6 @@ class Length {
         return addAndConvert(thatLength, this.unit);
     }
 
-    // UC7: Overloaded addition with explicitly specified target unit
     public Length add(Length length, LengthUnit targetUnit) {
         if (length == null || length.unit == null) {
             throw new IllegalArgumentException("Length to add cannot be null");
@@ -61,14 +67,13 @@ class Length {
         return addAndConvert(length, targetUnit);
     }
 
-    // UC7: Private utility method to perform addition conversion
     private Length addAndConvert(Length length, LengthUnit targetUnit) {
         double sumInInches = this.convertToBaseUnit() + length.convertToBaseUnit();
-        return new Length(this.convertFromBaseToTargetUnit(sumInInches, targetUnit), targetUnit);
+        return new Length(targetUnit.convertFromBaseUnit(sumInInches), targetUnit);
     }
 
     public boolean compare(Length thatLength) {
-        if (thatLength == null || this.unit == null || thatLength.unit == null) {
+        if (thatLength == null || thatLength.unit == null) {
             return false;
         }
         return Double.compare(this.convertToBaseUnit(), thatLength.convertToBaseUnit()) == 0;
@@ -115,46 +120,30 @@ public class QuantityMeasurementApp {
         return length1.add(length2);
     }
 
-    // UC7: Overloaded demonstrate method for explicit target unit
     public static Length demonstrateLengthAddition(Length length1, Length length2, LengthUnit targetUnit) {
         return length1.add(length2, targetUnit);
     }
 
     public static void main(String[] args) {
-        System.out.println("--- UC6: Addition (Implicit Target Unit) ---");
+        double baseValue = LengthUnit.FEET.convertToBaseUnit(5.0);
+        System.out.println("5.0 FEET to base unit (INCHES): " + baseValue);
+
+        double targetValue = LengthUnit.YARDS.convertFromBaseUnit(108.0);
+        System.out.println("108.0 base unit (INCHES) to YARDS: " + targetValue);
+
         Length length1 = new Length(1.0, LengthUnit.FEET);
         Length length2 = new Length(12.0, LengthUnit.INCHES);
-        System.out.println("1.0 FEET + 12.0 INCHES -> " + demonstrateLengthAddition(length1, length2));
+        System.out.println("Equality (1.0 FEET == 12.0 INCHES) -> " + length1.equals(length2));
 
-        System.out.println("\n--- UC7: Addition (Explicit Target Unit) ---");
+        Length length3 = new Length(2.0, LengthUnit.YARDS);
+        Length converted = length3.convertTo(LengthUnit.INCHES);
+        System.out.println("Conversion (2.0 YARDS -> INCHES) -> " + converted);
 
-        Length sumFeet = demonstrateLengthAddition(length1, length2, LengthUnit.FEET);
-        System.out.println("1.0 FEET + 12.0 INCHES (Target: FEET) -> " + sumFeet);
+        Length sum = demonstrateLengthAddition(length1, length2, LengthUnit.YARDS);
+        System.out.println("Addition (1.0 FEET + 12.0 INCHES, Target: YARDS) -> " + sum);
 
-        Length sumInches = demonstrateLengthAddition(length1, length2, LengthUnit.INCHES);
-        System.out.println("1.0 FEET + 12.0 INCHES (Target: INCHES) -> " + sumInches);
-
-        Length sumYards = demonstrateLengthAddition(length1, length2, LengthUnit.YARDS);
-        System.out.println("1.0 FEET + 12.0 INCHES (Target: YARDS) -> " + sumYards);
-
-        Length l3 = new Length(1.0, LengthUnit.YARDS);
-        Length l4 = new Length(3.0, LengthUnit.FEET);
-        Length sumYards2 = demonstrateLengthAddition(l3, l4, LengthUnit.YARDS);
-        System.out.println("1.0 YARDS + 3.0 FEET (Target: YARDS) -> " + sumYards2);
-
-        Length l5 = new Length(36.0, LengthUnit.INCHES);
-        Length l6 = new Length(1.0, LengthUnit.YARDS);
-        Length sumFeet2 = demonstrateLengthAddition(l5, l6, LengthUnit.FEET);
-        System.out.println("36.0 INCHES + 1.0 YARDS (Target: FEET) -> " + sumFeet2);
-
-        Length l7 = new Length(2.54, LengthUnit.CENTIMETERS);
-        Length l8 = new Length(1.0, LengthUnit.INCHES);
-        Length sumInches2 = demonstrateLengthAddition(l7, l8, LengthUnit.INCHES);
-        System.out.println("2.54 CENTIMETERS + 1.0 INCHES (Target: INCHES) -> " + sumInches2);
-
-        Length l9 = new Length(5.0, LengthUnit.FEET);
-        Length l10 = new Length(-2.0, LengthUnit.FEET);
-        Length sumInches3 = demonstrateLengthAddition(l9, l10, LengthUnit.INCHES);
-        System.out.println("5.0 FEET + (-2.0) FEET (Target: INCHES) -> " + sumInches3);
+        Length cmLength = new Length(2.54, LengthUnit.CENTIMETERS);
+        Length convertedCm = cmLength.convertTo(LengthUnit.INCHES);
+        System.out.println("Conversion (2.54 CENTIMETERS -> INCHES) -> " + convertedCm);
     }
 }
