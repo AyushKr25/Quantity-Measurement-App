@@ -29,6 +29,15 @@ class Length {
         return Math.round(inInches * 100.0) / 100.0;
     }
 
+    public Length convertTo(LengthUnit targetUnit) {
+        if (targetUnit == null) {
+            throw new IllegalArgumentException("Target unit cannot be null");
+        }
+        double inInches = this.convertToBaseUnit();
+        double targetValue = inInches / targetUnit.getConversionFactor();
+        return new Length(Math.round(targetValue * 100.0) / 100.0, targetUnit);
+    }
+
     public boolean compare(Length thatLength) {
         if (thatLength == null || this.unit == null || thatLength.unit == null) {
             return false;
@@ -42,6 +51,11 @@ class Length {
         if (o == null || getClass() != o.getClass()) return false;
         Length length = (Length) o;
         return compare(length);
+    }
+
+    @Override
+    public String toString() {
+        return String.format("%.2f %s", value, unit.name());
     }
 }
 
@@ -59,23 +73,39 @@ public class QuantityMeasurementApp {
         return result;
     }
 
+    public static Length demonstrateLengthConversion(double value, LengthUnit fromUnit, LengthUnit toUnit) {
+        Length length = new Length(value, fromUnit);
+        return length.convertTo(toUnit);
+    }
+
+    public static Length demonstrateLengthConversion(Length length, LengthUnit toUnit) {
+        return length.convertTo(toUnit);
+    }
+
     public static void main(String[] args) {
+        // UC4: Equality and Comparison Demonstrations
+        System.out.println("--- Equality Comparisons ---");
         demonstrateLengthComparison(1.0, LengthUnit.FEET, 12.0, LengthUnit.INCHES);
         demonstrateLengthComparison(1.0, LengthUnit.YARDS, 36.0, LengthUnit.INCHES);
         demonstrateLengthComparison(100.0, LengthUnit.CENTIMETERS, 39.3701, LengthUnit.INCHES);
-        demonstrateLengthComparison(3.0, LengthUnit.FEET, 1.0, LengthUnit.YARDS);
-        demonstrateLengthComparison(30.48, LengthUnit.CENTIMETERS, 1.0, LengthUnit.FEET);
 
-        Length length1 = new Length(1.0, LengthUnit.FEET);
-        Length length2 = new Length(12.0, LengthUnit.INCHES);
-        System.out.println("Are lengths equal? " + length1.equals(length2));
+        // UC5: Explicit Unit-to-Unit Conversion Demonstrations
+        System.out.println("\n--- Unit Conversions ---");
 
-        Length length3 = new Length(1.0, LengthUnit.YARDS);
-        Length length4 = new Length(36.0, LengthUnit.INCHES);
-        System.out.println("Are lengths equal? " + length3.equals(length4));
+        // 1. Using raw values
+        Length converted1 = demonstrateLengthConversion(1.0, LengthUnit.FEET, LengthUnit.INCHES);
+        System.out.println("1.0 FEET to INCHES -> " + converted1.toString());
 
-        Length length5 = new Length(100.0, LengthUnit.CENTIMETERS);
-        Length length6 = new Length(39.3701, LengthUnit.INCHES);
-        System.out.println("Are lengths equal? " + length5.equals(length6));
+        Length converted2 = demonstrateLengthConversion(36.0, LengthUnit.INCHES, LengthUnit.YARDS);
+        System.out.println("36.0 INCHES to YARDS -> " + converted2.toString());
+
+        // 2. Using an existing Length instance
+        Length lengthInYards = new Length(2.0, LengthUnit.YARDS);
+        Length converted3 = demonstrateLengthConversion(lengthInYards, LengthUnit.INCHES);
+        System.out.println("2.0 YARDS to INCHES -> " + converted3.toString());
+
+        Length lengthInCm = new Length(2.54, LengthUnit.CENTIMETERS);
+        Length converted4 = demonstrateLengthConversion(lengthInCm, LengthUnit.INCHES);
+        System.out.println("2.54 CENTIMETERS to INCHES -> " + converted4.toString());
     }
 }
