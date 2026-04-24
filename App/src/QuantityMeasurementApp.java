@@ -42,12 +42,29 @@ class Length {
         return new Length(this.convertFromBaseToTargetUnit(inInches, targetUnit), targetUnit);
     }
 
+    // UC6: Addition where result defaults to the unit of the first operand
     public Length add(Length thatLength) {
         if (thatLength == null || thatLength.unit == null) {
             throw new IllegalArgumentException("Length to add cannot be null");
         }
-        double sumInInches = this.convertToBaseUnit() + thatLength.convertToBaseUnit();
-        return new Length(this.convertFromBaseToTargetUnit(sumInInches, this.unit), this.unit);
+        return addAndConvert(thatLength, this.unit);
+    }
+
+    // UC7: Overloaded addition with explicitly specified target unit
+    public Length add(Length length, LengthUnit targetUnit) {
+        if (length == null || length.unit == null) {
+            throw new IllegalArgumentException("Length to add cannot be null");
+        }
+        if (targetUnit == null) {
+            throw new IllegalArgumentException("Target unit cannot be null");
+        }
+        return addAndConvert(length, targetUnit);
+    }
+
+    // UC7: Private utility method to perform addition conversion
+    private Length addAndConvert(Length length, LengthUnit targetUnit) {
+        double sumInInches = this.convertToBaseUnit() + length.convertToBaseUnit();
+        return new Length(this.convertFromBaseToTargetUnit(sumInInches, targetUnit), targetUnit);
     }
 
     public boolean compare(Length thatLength) {
@@ -98,27 +115,46 @@ public class QuantityMeasurementApp {
         return length1.add(length2);
     }
 
-    public static void main(String[] args) {
-        System.out.println("--- Addition Demonstrations ---");
+    // UC7: Overloaded demonstrate method for explicit target unit
+    public static Length demonstrateLengthAddition(Length length1, Length length2, LengthUnit targetUnit) {
+        return length1.add(length2, targetUnit);
+    }
 
+    public static void main(String[] args) {
+        System.out.println("--- UC6: Addition (Implicit Target Unit) ---");
         Length length1 = new Length(1.0, LengthUnit.FEET);
         Length length2 = new Length(12.0, LengthUnit.INCHES);
-        Length sum1 = demonstrateLengthAddition(length1, length2);
-        System.out.println("1.0 FEET + 12.0 INCHES -> " + sum1.toString());
+        System.out.println("1.0 FEET + 12.0 INCHES -> " + demonstrateLengthAddition(length1, length2));
 
-        Length length3 = new Length(12.0, LengthUnit.INCHES);
-        Length length4 = new Length(1.0, LengthUnit.FEET);
-        Length sum2 = demonstrateLengthAddition(length3, length4);
-        System.out.println("12.0 INCHES + 1.0 FEET -> " + sum2.toString());
+        System.out.println("\n--- UC7: Addition (Explicit Target Unit) ---");
 
-        Length length5 = new Length(1.0, LengthUnit.YARDS);
-        Length length6 = new Length(3.0, LengthUnit.FEET);
-        Length sum3 = demonstrateLengthAddition(length5, length6);
-        System.out.println("1.0 YARDS + 3.0 FEET -> " + sum3.toString());
+        Length sumFeet = demonstrateLengthAddition(length1, length2, LengthUnit.FEET);
+        System.out.println("1.0 FEET + 12.0 INCHES (Target: FEET) -> " + sumFeet);
 
-        Length length7 = new Length(2.54, LengthUnit.CENTIMETERS);
-        Length length8 = new Length(1.0, LengthUnit.INCHES);
-        Length sum4 = demonstrateLengthAddition(length7, length8);
-        System.out.println("2.54 CENTIMETERS + 1.0 INCHES -> " + sum4.toString());
+        Length sumInches = demonstrateLengthAddition(length1, length2, LengthUnit.INCHES);
+        System.out.println("1.0 FEET + 12.0 INCHES (Target: INCHES) -> " + sumInches);
+
+        Length sumYards = demonstrateLengthAddition(length1, length2, LengthUnit.YARDS);
+        System.out.println("1.0 FEET + 12.0 INCHES (Target: YARDS) -> " + sumYards);
+
+        Length l3 = new Length(1.0, LengthUnit.YARDS);
+        Length l4 = new Length(3.0, LengthUnit.FEET);
+        Length sumYards2 = demonstrateLengthAddition(l3, l4, LengthUnit.YARDS);
+        System.out.println("1.0 YARDS + 3.0 FEET (Target: YARDS) -> " + sumYards2);
+
+        Length l5 = new Length(36.0, LengthUnit.INCHES);
+        Length l6 = new Length(1.0, LengthUnit.YARDS);
+        Length sumFeet2 = demonstrateLengthAddition(l5, l6, LengthUnit.FEET);
+        System.out.println("36.0 INCHES + 1.0 YARDS (Target: FEET) -> " + sumFeet2);
+
+        Length l7 = new Length(2.54, LengthUnit.CENTIMETERS);
+        Length l8 = new Length(1.0, LengthUnit.INCHES);
+        Length sumInches2 = demonstrateLengthAddition(l7, l8, LengthUnit.INCHES);
+        System.out.println("2.54 CENTIMETERS + 1.0 INCHES (Target: INCHES) -> " + sumInches2);
+
+        Length l9 = new Length(5.0, LengthUnit.FEET);
+        Length l10 = new Length(-2.0, LengthUnit.FEET);
+        Length sumInches3 = demonstrateLengthAddition(l9, l10, LengthUnit.INCHES);
+        System.out.println("5.0 FEET + (-2.0) FEET (Target: INCHES) -> " + sumInches3);
     }
 }
