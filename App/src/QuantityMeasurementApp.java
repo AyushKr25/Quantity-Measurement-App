@@ -29,13 +29,25 @@ class Length {
         return Math.round(inInches * 100.0) / 100.0;
     }
 
+    private double convertFromBaseToTargetUnit(double lengthInInches, LengthUnit targetUnit) {
+        double targetValue = lengthInInches / targetUnit.getConversionFactor();
+        return Math.round(targetValue * 100.0) / 100.0;
+    }
+
     public Length convertTo(LengthUnit targetUnit) {
         if (targetUnit == null) {
             throw new IllegalArgumentException("Target unit cannot be null");
         }
         double inInches = this.convertToBaseUnit();
-        double targetValue = inInches / targetUnit.getConversionFactor();
-        return new Length(Math.round(targetValue * 100.0) / 100.0, targetUnit);
+        return new Length(this.convertFromBaseToTargetUnit(inInches, targetUnit), targetUnit);
+    }
+
+    public Length add(Length thatLength) {
+        if (thatLength == null || thatLength.unit == null) {
+            throw new IllegalArgumentException("Length to add cannot be null");
+        }
+        double sumInInches = this.convertToBaseUnit() + thatLength.convertToBaseUnit();
+        return new Length(this.convertFromBaseToTargetUnit(sumInInches, this.unit), this.unit);
     }
 
     public boolean compare(Length thatLength) {
@@ -82,30 +94,31 @@ public class QuantityMeasurementApp {
         return length.convertTo(toUnit);
     }
 
+    public static Length demonstrateLengthAddition(Length length1, Length length2) {
+        return length1.add(length2);
+    }
+
     public static void main(String[] args) {
-        // UC4: Equality and Comparison Demonstrations
-        System.out.println("--- Equality Comparisons ---");
-        demonstrateLengthComparison(1.0, LengthUnit.FEET, 12.0, LengthUnit.INCHES);
-        demonstrateLengthComparison(1.0, LengthUnit.YARDS, 36.0, LengthUnit.INCHES);
-        demonstrateLengthComparison(100.0, LengthUnit.CENTIMETERS, 39.3701, LengthUnit.INCHES);
+        System.out.println("--- Addition Demonstrations ---");
 
-        // UC5: Explicit Unit-to-Unit Conversion Demonstrations
-        System.out.println("\n--- Unit Conversions ---");
+        Length length1 = new Length(1.0, LengthUnit.FEET);
+        Length length2 = new Length(12.0, LengthUnit.INCHES);
+        Length sum1 = demonstrateLengthAddition(length1, length2);
+        System.out.println("1.0 FEET + 12.0 INCHES -> " + sum1.toString());
 
-        // 1. Using raw values
-        Length converted1 = demonstrateLengthConversion(1.0, LengthUnit.FEET, LengthUnit.INCHES);
-        System.out.println("1.0 FEET to INCHES -> " + converted1.toString());
+        Length length3 = new Length(12.0, LengthUnit.INCHES);
+        Length length4 = new Length(1.0, LengthUnit.FEET);
+        Length sum2 = demonstrateLengthAddition(length3, length4);
+        System.out.println("12.0 INCHES + 1.0 FEET -> " + sum2.toString());
 
-        Length converted2 = demonstrateLengthConversion(36.0, LengthUnit.INCHES, LengthUnit.YARDS);
-        System.out.println("36.0 INCHES to YARDS -> " + converted2.toString());
+        Length length5 = new Length(1.0, LengthUnit.YARDS);
+        Length length6 = new Length(3.0, LengthUnit.FEET);
+        Length sum3 = demonstrateLengthAddition(length5, length6);
+        System.out.println("1.0 YARDS + 3.0 FEET -> " + sum3.toString());
 
-        // 2. Using an existing Length instance
-        Length lengthInYards = new Length(2.0, LengthUnit.YARDS);
-        Length converted3 = demonstrateLengthConversion(lengthInYards, LengthUnit.INCHES);
-        System.out.println("2.0 YARDS to INCHES -> " + converted3.toString());
-
-        Length lengthInCm = new Length(2.54, LengthUnit.CENTIMETERS);
-        Length converted4 = demonstrateLengthConversion(lengthInCm, LengthUnit.INCHES);
-        System.out.println("2.54 CENTIMETERS to INCHES -> " + converted4.toString());
+        Length length7 = new Length(2.54, LengthUnit.CENTIMETERS);
+        Length length8 = new Length(1.0, LengthUnit.INCHES);
+        Length sum4 = demonstrateLengthAddition(length7, length8);
+        System.out.println("2.54 CENTIMETERS + 1.0 INCHES -> " + sum4.toString());
     }
 }
